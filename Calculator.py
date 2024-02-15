@@ -87,6 +87,11 @@ def divide_into_units(expr: str)->list[str]:
 
     return units
 
+def _interpret_indent(indent: str, indent_depth: int = 0)->str:
+    if indent == "count":
+        return f"<L{indent_depth}>"
+    return indent*indent_depth
+
 def interpret(
     units: list[str], 
     operand_range: tuple[int, int] = (0, np.inf), 
@@ -100,7 +105,8 @@ def interpret(
 
     #Print where it is in the calculation with tabs to show depth
     if verbose:
-        print(indent*indent_depth + f"Interpreting {units[start : end]}") 
+        print(_interpret_indent(indent, indent_depth) 
+              + f"Interpreting {units[start : end]}") 
 
     #Base case or further recursive calculation if need be
     # If the range is just one unit:
@@ -141,7 +147,8 @@ def interpret(
     #Recursively interpret the operands(often lhs and rhs) and use them in an operation
     lowest_rank_operator = units[lowest_op_rank_idx]
     if verbose:
-        print(indent*indent_depth + f"Key operation: {lowest_rank_operator}\n")
+        print(_interpret_indent(indent, indent_depth) 
+              + f"Key operation: {lowest_rank_operator}\n")
 
     #Most operators will have an lhs and rhs that can be recursively calculated
     if lowest_rank_operator in "^*/+-":
@@ -153,14 +160,16 @@ def interpret(
             verbose=verbose, indent=indent, indent_depth=indent_depth + 1
         )
         if verbose:
-            print(indent*indent_depth + f"('{lowest_rank_operator}' lhs return): {lhs}")
+            print(_interpret_indent(indent, indent_depth) 
+                  + f"('{lowest_rank_operator}' lhs return): {lhs}")
 
         rhs = interpret(
             units, (rhs_start, rhs_end),
             verbose=verbose, indent=indent, indent_depth=indent_depth + 1
         )
         if verbose:
-            print(indent*indent_depth + f"('{lowest_rank_operator}' rhs return): {rhs}")
+            print(_interpret_indent(indent, indent_depth) 
+                  + f"('{lowest_rank_operator}' rhs return): {rhs}")
         
         if lowest_rank_operator == "^":
             return lhs**rhs
@@ -180,7 +189,8 @@ def interpret(
             verbose=verbose, indent=indent, indent_depth=indent_depth + 1
         )
         if verbose:
-            print(indent*indent_depth + f"('{lowest_rank_operator}' rhs return): {rhs}")
+            print(_interpret_indent(indent, indent_depth) 
+                  + f"('{lowest_rank_operator}' rhs return): {rhs}")
         
         return rhs
 
