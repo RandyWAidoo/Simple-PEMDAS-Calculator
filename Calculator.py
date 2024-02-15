@@ -216,5 +216,3 @@ def from_user_input(
         print("The result of this expression is:", result)
 
     return result
-
-from_user_input(verbose=True)
