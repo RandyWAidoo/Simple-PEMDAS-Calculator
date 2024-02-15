@@ -82,6 +82,10 @@ def divide_into_units(expr: str)->list[str]:
             elif char == "+":
                 units[-1] += char
                 units.append("") 
+            
+            #Error when an invalid operator is found
+            else:
+                raise ValueError(f"Invalid operator '{char}' in expression")
 
         i += 1 #Increment i
 
@@ -131,7 +135,7 @@ def interpret(
     #Raise an error if there is not at least one operator, yet the expression length is > 1
     if not len(operator_idxs):
         raise ValueError(
-            f"Invalid expression '{''.join(units[start, end])}'"
+            f"Invalid expression '{units[start : end]}'"
         )
 
     #Find the lowest ranking operator to the left and calculate
