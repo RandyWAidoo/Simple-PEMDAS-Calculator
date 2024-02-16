@@ -3,7 +3,7 @@ import numpy as np
 
 operator_to_rank = {#Lower num means higher rank
     "^": 1,
-    "_": 2, #Negative(arbitrary non-calculator symbol)
+    "_": 2, #Negative symbol(arbitrary non-calculator symbol)
     "*": 2,
     "/": 2,
     "+": 3,
@@ -22,17 +22,21 @@ def divide_into_units(expr: str)->list[str]:
             units[-1] += char
         #Otherwise:
         else:
-            #If an value is already there(like a num or operator)
-            # stop and add a new string for this new operator(since it's not a num)
+            #If a value is already at the end of the units
+            # (a num, operator, or parenthesized expr),
+            # stop and add a new string for this new operator
+            # (there are only either operators or numbers)
             if units[-1]:
                 units.append("")
 
-            #Prevent use of '_' since its reserved. It won't accidentally
-            # error because it won't see an operator again once it separates it out
+            #Prevent use of '_' since its reserved. 
             if char == "_": 
                 raise ValueError("Invalid character in expression")
 
-            #Handle minus and convert it to a negative if it actually is one
+            #Separate out '-' as an operator
+            # Convert it to a negative if it actually is one. 
+            # It won't accidentally error later due to the non-operator because 
+            # it won't see an operator again once it separates it out/changes it
             elif char == "-":
                 units[-1] += char
                 units.append("")
@@ -92,6 +96,7 @@ def divide_into_units(expr: str)->list[str]:
     return units
 
 def _interpret_indent(indent: str, indent_depth: int = 0)->str:
+    #Return an indent to indicate recursion depth in the case of verbosity
     if indent == "count":
         return f"<L{indent_depth}>"
     return indent*indent_depth
@@ -103,7 +108,7 @@ def interpret(
     indent: str = ">", #For verbosity
     indent_depth: int = 0 #For verbosity
 )->float:
-    #Define a start and end for the range of units we are condidering
+    #Define a start and end for the range of units we are considering
     start = operand_range[0]
     end = len(units) if operand_range[1] == np.inf else operand_range[1]
 
@@ -114,7 +119,7 @@ def interpret(
 
     #Base case or further recursive calculation if need be
     # If the range is just one unit:
-    if abs(end - start) == 1: #Abs because of default values of 0 and -1
+    if (end - start) == 1: #Abs because of default values of 0 and -1
         #Base case: If it's not divisible into more units, return it as regular number
         new_units = divide_into_units(units[start]) 
         if len(new_units) == 1:
@@ -154,7 +159,7 @@ def interpret(
         print(_interpret_indent(indent, indent_depth) 
               + f"Key operation: {lowest_rank_operator}\n")
 
-    #Most operators will have an lhs and rhs that can be recursively calculated
+    # Most operators will have an lhs and rhs that can be recursively calculated
     if lowest_rank_operator in "^*/+-":
         lhs_start, lhs_end = start, lowest_op_rank_idx
         rhs_start, rhs_end = lowest_op_rank_idx + 1, end
@@ -185,7 +190,7 @@ def interpret(
             return lhs + rhs
         return lhs - rhs #lowest_operator = "-"
 
-    #There is also the negative symbol(I chose '_') which only uses an rhs
+    # There is also the negative symbol(I chose '_') which only uses an rhs
     else: #lowest_rank = "_"
         rhs_start, rhs_end = lowest_op_rank_idx + 1, lowest_op_rank_idx + 2
         rhs = -interpret(
@@ -213,20 +218,19 @@ def calculate(
     #Calculate a result using the expression units as instructions
     # The first expression unit will be the whole expression and it breaks
     # down further into units e.g. 3+(1*46) -> ['3', '+', '1*46']
-    return interpret([expr], verbose=verbose, indent=indent)
+    result = interpret([expr], verbose=verbose, indent=indent)
+    if verbose:
+        print("The result of this expression is:", result)
+    
+    return result
 
 def from_user_input(
+    prompt : str = "Enter a mathematical expression: ",
     verbose=False, 
     indent: str = ">" #For verbosity
 )->float:
-    x = input("Enter a mathematical expression: ")
-
+    x = input(prompt)
     if verbose:
         print("")
 
-    result = calculate(x, verbose=verbose, indent=indent)
-
-    if verbose:
-        print("The result of this expression is:", result)
-
-    return result
+    return calculate(x, verbose=verbose, indent=indent)
