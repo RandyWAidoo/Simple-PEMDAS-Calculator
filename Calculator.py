@@ -6,8 +6,8 @@ operator_to_rank = {#Lower num means higher rank
     "_": 2, #Negative symbol(arbitrary non-calculator symbol)
     "*": 2,
     "/": 2,
-    "+": 3,
-    "-": 3
+    "-": 3, #Subtraction needs to be ranked higher so it doesn't distribute a -1 to everyting
+    "+": 4,
 }
 
 def divide_into_units(expr: str)->list[str]:
