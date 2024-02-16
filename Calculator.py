@@ -3,11 +3,11 @@ import numpy as np
 
 operator_to_rank = {#Lower num means higher rank
     "^": 1,
-    "_": 2, #Negative symbol(arbitrary non-calculator symbol)
-    "*": 2,
-    "/": 2,
-    "-": 3, #Subtraction needs to be ranked higher so it doesn't distribute a -1 to everyting
-    "+": 4,
+    "_": 1, #Negative symbol(arbitrary non-calculator symbol)
+    "/": 3,
+    "*": 4,
+    "-": 5,
+    "+": 6,
 }
 
 def divide_into_units(expr: str)->list[str]:
@@ -192,7 +192,7 @@ def interpret(
 
     # There is also the negative symbol(I chose '_') which only uses an rhs
     else: #lowest_rank = "_"
-        rhs_start, rhs_end = lowest_op_rank_idx + 1, lowest_op_rank_idx + 2
+        rhs_start, rhs_end = lowest_op_rank_idx + 1, end
         rhs = -interpret(
             units, (rhs_start, rhs_end), 
             verbose=verbose, indent=indent, indent_depth=indent_depth + 1
