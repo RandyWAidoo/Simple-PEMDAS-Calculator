@@ -29,15 +29,11 @@ def divide_into_units(expr: str)->list[str]:
             if units[-1]:
                 units.append("")
 
-            #Prevent use of '_' since its reserved. 
-            if char == "_": 
-                raise ValueError("Invalid character in expression")
-
             #Separate out '-' as an operator
             # Convert it to a negative if it actually is one. 
             # It won't accidentally error later due to the non-operator because 
             # it won't see an operator again once it separates it out/changes it
-            elif char == "-":
+            if char == "-":
                 units[-1] += char
                 units.append("")
 
@@ -140,7 +136,7 @@ def interpret(
     #Raise an error if there is not at least one operator, yet the expression length is > 1
     if not len(operator_idxs):
         raise ValueError(
-            f"Invalid expression '{units[start : end]}'"
+            f"Invalid expression {units[start : end]}"
         )
 
     #Find the lowest ranking operator to the left and calculate
@@ -193,7 +189,7 @@ def interpret(
     # There is also the negative symbol(I chose '_') which only uses an rhs
     else: #lowest_rank = "_"
         rhs_start, rhs_end = lowest_op_rank_idx + 1, end
-        rhs = -interpret(
+        rhs = interpret(
             units, (rhs_start, rhs_end), 
             verbose=verbose, indent=indent, indent_depth=indent_depth + 1
         )
@@ -201,7 +197,7 @@ def interpret(
             print(_interpret_indent(indent, indent_depth) 
                   + f"('{lowest_rank_operator}' rhs return): {rhs}")
         
-        return rhs
+        return -rhs
 
 def calculate(
     expr: str, 
