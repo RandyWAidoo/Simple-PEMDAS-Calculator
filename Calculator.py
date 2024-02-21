@@ -91,6 +91,11 @@ def divide_into_units(expr: str)->list[str]:
                 units[-1] += char
                 units.append("")
 
+            #Separate out '%' as an operator
+            elif char == "%":
+                units[-1] += char
+                units.append("")
+
             #Separate out '+' as an operator
             elif char == "+":
                 units[-1] += char
@@ -186,7 +191,7 @@ def interpret(
               + f"Key operation: {lowest_rank_operator}\n")
 
     # Most operators will have an lhs and rhs that can be recursively calculated
-    if lowest_rank_operator in "^*/+-":
+    if lowest_rank_operator in "^*/%+-":
         lhs_start, lhs_end = start, lowest_op_rank_idx
         rhs_start, rhs_end = lowest_op_rank_idx + 1, end
 
@@ -212,6 +217,8 @@ def interpret(
             return lhs*rhs
         elif lowest_rank_operator == "/":
             return lhs/rhs
+        elif lowest_rank_operator == "%":
+            return lhs%rhs
         elif lowest_rank_operator == "+":
             return lhs + rhs
         return lhs - rhs #lowest_operator = "-"
