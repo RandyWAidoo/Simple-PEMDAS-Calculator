@@ -1,13 +1,26 @@
 import typing as tp
 import numpy as np
 
-operator_to_rank = {#Lower num means higher rank
-    "^": 1,
-    "_": 1, #Negative symbol(arbitrary non-calculator symbol)
-    "/": 3,
-    "*": 4,
-    "-": 5,
-    "+": 6,
+#Operator rankings:
+# Lower absolute value means higher general rank which means fastest evaluation; 
+#  |rank| > 0;
+#  A rank value may only ever be either negative or positive. 
+#  That means if -1 is a rank, 1 will never be a rank.
+#  This is because magnitude determines absolute order of evalution, 
+#  but postivity or negativity determines lateral order of evaluation
+#  (right to left like with exponents and negatives 
+#   or left to right as it is with most operators)
+#  in the case of equal ranking. 
+#  Negative means the right will be evaluated first
+#  positive means the left will be evaluated first
+operator_to_rank = {
+    "^": -1,
+    "_": -1, #Negative symbol(arbitrary non-calculator symbol)
+    "/": 2,
+    "*": 2,
+    "%": 2,
+    "-": 3,
+    "+": 3,
 }
 
 def divide_into_units(expr: str)->list[str]:
@@ -108,19 +121,19 @@ def interpret(
     start = operand_range[0]
     end = len(units) if operand_range[1] == np.inf else operand_range[1]
 
-    #Print where it is in the calculation with tabs to show depth
+    #Print where it is in the calculation with some indent to show depth
     if verbose:
         print(_interpret_indent(indent, indent_depth) 
               + f"Interpreting {units[start : end]}") 
 
-    #Base case or further recursive calculation if need be
+    #Base case or further recursive parsing if need be.
     # If the range is just one unit:
     if (end - start) == 1: #Abs because of default values of 0 and -1
         #Base case: If it's not divisible into more units, return it as regular number
         new_units = divide_into_units(units[start]) 
         if len(new_units) == 1:
             return float(new_units[0])
-        #Otherwise, do further calculation recursively on the unit
+        #Otherwise, recursively do further parsing on the unit
         else:
             return interpret(
                 new_units, 
@@ -139,17 +152,34 @@ def interpret(
             f"Invalid expression {units[start : end]}"
         )
 
-    #Find the lowest ranking operator to the left and calculate
-    # the value of its operands which will be the remaining segments
-    # of the current operand range
+    #Find the lowest ranking operator to the 
+    # left or right depending on its sign. 
+    # Negative means left priority(in being chosen, not evaluated), 
+    # positive means right priority. 
+    # Being chosen first means higher recursion tree level which means later evaluation.
     lowest_op_rank_idx = operator_idxs[0]
     for i in operator_idxs:
         curr_rank = operator_to_rank[units[i]]
         lowest_rank = operator_to_rank[units[lowest_op_rank_idx]]
-        if curr_rank > lowest_rank:
+        #Maginitude of rank is most important in determining the key operation.
+        # Lower ranks(higher rank numbers values) become key operations sooner
+        if abs(curr_rank) > abs(lowest_rank):
             lowest_op_rank_idx = i
+        #However, when ranks are equal, sign determines the direction
+        # of priority.
+        elif curr_rank == lowest_rank:
+            #Positive means it will be further up in the recursion tree 
+            # the further right it is. That means it will be a key operation sooner
+            # which actually translates into it being evaluated later 
+            if curr_rank > 0:
+                lowest_op_rank_idx = i
+            #Leftmost is highest in the tree for negatives so nothing needs to be done
+            else:
+                pass
 
-    #Recursively interpret the operands(often lhs and rhs) and use them in an operation
+    #Recursively interpret the operands(often lhs and rhs) and use them in an operation.
+    # lhs and rhs will always be the remaining segments of the current operand range
+    # in their respective directions. They are partitions on the set of units
     lowest_rank_operator = units[lowest_op_rank_idx]
     if verbose:
         print(_interpret_indent(indent, indent_depth) 
@@ -186,7 +216,7 @@ def interpret(
             return lhs + rhs
         return lhs - rhs #lowest_operator = "-"
 
-    # There is also the negative symbol(I chose '_') which only uses an rhs
+    # There is also the negative symbol('_') which only uses an rhs
     else: #lowest_rank = "_"
         rhs_start, rhs_end = lowest_op_rank_idx + 1, end
         rhs = interpret(
@@ -213,7 +243,7 @@ def calculate(
     
     #Calculate a result using the expression units as instructions
     # The first expression unit will be the whole expression and it breaks
-    # down further into units e.g. 3+(1*46) -> ['3', '+', '1*46']
+    # down further into units e.g. 3+(1*46) -> ['3', '+', '1*46'] -> ...
     result = interpret([expr], verbose=verbose, indent=indent)
     if verbose:
         print("The result of this expression is:", result)
