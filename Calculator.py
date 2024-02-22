@@ -1,18 +1,6 @@
 import typing as tp
 import numpy as np
 
-#Operator rankings:
-# Lower absolute value means higher general rank which means fastest evaluation; 
-#  |rank| > 0;
-#  A rank value may only ever be either negative or positive. 
-#  That means if -1 is a rank, 1 will never be a rank.
-#  This is because magnitude determines absolute order of evalution, 
-#  but postivity or negativity determines lateral order of evaluation
-#  (right to left like with exponents and negatives 
-#   or left to right as it is with most operators)
-#  in the case of equal ranking. 
-#  Negative means the right will be evaluated first
-#  positive means the left will be evaluated first
 operator_to_rank = {
     "^": -1,
     "_": -1, #Negative symbol(arbitrary non-calculator symbol)
@@ -159,9 +147,6 @@ def interpret(
 
     #Find the lowest ranking operator to the 
     # left or right depending on its sign. 
-    # Negative means left priority(in being chosen, not evaluated), 
-    # positive means right priority. 
-    # Being chosen first means higher recursion tree level which means later evaluation.
     lowest_op_rank_idx = operator_idxs[0]
     for i in operator_idxs:
         curr_rank = operator_to_rank[units[i]]
@@ -175,7 +160,6 @@ def interpret(
         elif curr_rank == lowest_rank:
             #Positive means it will be further up in the recursion tree 
             # the further right it is. That means it will be a key operation sooner
-            # which actually translates into it being evaluated later 
             if curr_rank > 0:
                 lowest_op_rank_idx = i
             #Leftmost is highest in the tree for negatives so nothing needs to be done
